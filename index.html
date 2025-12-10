@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Mate Dev Dashboard</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        h1 {
+            color: #2563eb;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 1rem 0;
+        }
+
+        a {
+            display: block;
+            padding: 1rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: #1f2937;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        a:hover {
+            background: #e5e7eb;
+        }
+
+        .note {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #fff7ed;
+            border-radius: 0.5rem;
+            border: 1px solid #fdba74;
+            font-size: 0.9rem;
+            color: #9a3412;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>English Mate Development</h1>
+    <p>Select a view to develop in isolation:</p>
+    <ul>
+        <li><a href="/src/popup/index.html">📱 Extension Popup</a></li>
+    </ul>
+
+    <div class="note">
+        <strong>Note:</strong> This page is only for development (`npm run dev`).
+        To test the actual extension functionality (Context Menu, Content Scripts),
+        you must run <code>npm run build</code> and load the <code>dist</code> folder in Chrome.
+    </div>
+</body>
+
+</html>
