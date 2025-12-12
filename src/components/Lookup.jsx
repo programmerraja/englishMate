@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { fetchDefinition } from '../lib/api';
-import { saveWord } from '../lib/storage';
+import { saveVocabularyItem } from '../lib/storage';
 import './Lookup.css';
 
 const Lookup = () => {
@@ -30,7 +30,7 @@ const Lookup = () => {
     const handleSave = async () => {
         if (!result) return;
         try {
-            await saveWord(result);
+            await saveVocabularyItem(result);
             alert(`Saved: ${result.word}`);
         } catch (err) {
             console.error(err);

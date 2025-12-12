@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Tooltip from './Tooltip';
 import SidePanel from './SidePanel';
 import MainSidebar from './MainSidebar';
+import Toast from './Toast';
 import './content.css';
 
 // Import App CSS to ensure it's injected into Shadow DOM
@@ -16,6 +17,7 @@ const ContentApp = () => {
     const [panelWord, setPanelWord] = useState(null);
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [isMainSidebarOpen, setIsMainSidebarOpen] = useState(false);
+    const [activeToast, setActiveToast] = useState(null);
 
     // Use ref to access current state in event handlers without re-binding
     const isMainSidebarOpenRef = useRef(isMainSidebarOpen);
@@ -63,6 +65,12 @@ const ContentApp = () => {
                 setPanelWord(request.word);
                 setIsPanelOpen(true);
                 setSelection(null);
+            } else if (request.action === "show_toast") {
+                setActiveToast({
+                    message: request.message,
+                    type: request.type || 'success',
+                    id: Date.now() // unique id to force re-render if needed
+                });
             }
         };
 
@@ -110,6 +118,15 @@ const ContentApp = () => {
                 isOpen={isMainSidebarOpen}
                 onClose={() => setIsMainSidebarOpen(false)}
             />
+
+            {activeToast && (
+                <Toast
+                    key={activeToast.id}
+                    message={activeToast.message}
+                    type={activeToast.type}
+                    onClose={() => setActiveToast(null)}
+                />
+            )}
         </>
     );
 };

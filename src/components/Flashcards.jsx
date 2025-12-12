@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSavedWords } from '../lib/storage';
+import { getVocabulary, updateVocabularyItem } from '../lib/storage';
 import './Flashcards.css';
 
 const Flashcards = () => {
@@ -13,7 +13,7 @@ const Flashcards = () => {
     }, []);
 
     const loadWords = async () => {
-        const saved = await getSavedWords();
+        const saved = await getVocabulary();
         setWords(saved);
         setLoading(false);
     };
@@ -22,6 +22,36 @@ const Flashcards = () => {
         setIsFlipped(false);
         // Simple loop: go to next, wrap around if at end
         setCurrentIndex((prev) => (prev + 1) % words.length);
+    };
+
+    const handleResult = async (known) => {
+        const word = words[currentIndex];
+        const currentStats = word.stats || { confidenceLevel: 0 };
+        const newConfidence = known ? (currentStats.confidenceLevel || 0) + 1 : 1;
+
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + (known ? newConfidence : 1));
+
+        const updates = {
+            stats: {
+                practicedAt: new Date().toISOString(),
+                nextReviewDate: nextDate.toISOString(),
+                confidenceLevel: newConfidence
+            }
+        };
+
+        try {
+            await updateVocabularyItem(word.id, updates);
+
+            // Update local state to reflect changes
+            const newWords = [...words];
+            newWords[currentIndex] = { ...word, ...updates };
+            setWords(newWords);
+        } catch (e) {
+            console.error("Failed to update stats", e);
+        }
+
+        handleNext();
     };
 
     if (loading) return <div className="fc-loading">Loading...</div>;
@@ -52,7 +82,7 @@ const Flashcards = () => {
                 <div className="fc-back">
                     <div className="fc-content">
                         <span className="fc-pos">{currentWord.partOfSpeech}</span>
-                        <p className="fc-def">{currentWord.definition}</p>
+                        <p className="fc-def">{currentWord.meaning}</p>
                         {currentWord.example && (
                             <p className="fc-ex">"{currentWord.example}"</p>
                         )}
@@ -67,10 +97,10 @@ const Flashcards = () => {
                     </button>
                 ) : (
                     <div className="rating-btns">
-                        <button className="btn-hard" onClick={handleNext}>
+                        <button className="btn-hard" onClick={() => handleResult(false)}>
                             ❌ I Don't Know
                         </button>
-                        <button className="btn-easy" onClick={handleNext}>
+                        <button className="btn-easy" onClick={() => handleResult(true)}>
                             ✅ I Know
                         </button>
                     </div>

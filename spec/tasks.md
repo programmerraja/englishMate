@@ -1,43 +1,28 @@
-# 📋 Development Tasks: English Mate
 
-## 🟢 Phase 1: Core Logic & Popup UI (Current Focus)
+# Implementation Tasks
 
-### 1.1. Dictionary API Integration
-- [ ] Create `src/lib/api.js`
-- [ ] Implement `fetchDefinition(word)` using `dictionaryapi.dev`
-- [ ] Handle errors (word not found, network error)
+- [x] **Task 1: Refactor Storage Layer**
+    - Update `src/lib/storage.js` to initialize and manage the new data structure (`{ vocabulary: [], sentences: [] }`).
+    - Implement a migration function to convert existing `savedWords` to the new `vocabulary` format with IDs and default stats.
+    - Add utility functions: `getVocabulary`, `saveVocabularyItem`, `updateVocabularyItem` (for stats), `getSentences`, `saveSentence`.
+    - Ensure backward compatibility or clear migration path.
 
-### 1.2. Popup UI - Structure & Navigation
-- [ ] Create Tab System (Lookup / Flashcards) in `App.jsx`
-- [ ] Create `LookupView` component
-- [ ] Create `FlashcardView` component
+- [x] **Task 2: Update Lookup Component**
+    - Modify `src/components/Lookup.jsx` to construct the full vocabulary object (with `id` using `crypto.randomUUID()`, `stats`, `tags`, etc.) before saving.
+    - Use the new `saveVocabularyItem` function.
 
-### 1.3. Popup UI - Lookup Feature
-- [ ] Implement Search Bar & Button
-- [ ] Display Word Definition (Meaning, Example, Part of Speech)
-- [ ] Add "Save Word" button (Visual only for now)
-- [ ] Add Loading & Error states
+- [x] **Task 3: Update Flashcards Component**
+    - Modify `src/components/Flashcards.jsx` to use `getVocabulary`.
+    - Implement the logic for "I Know" (Confidence +1, set next review date) and "I Don't Know" (Reset confidence).
+    - Use `updateVocabularyItem` to save progress.
 
-### 1.4. Storage Logic
-- [ ] Create `src/lib/storage.js`
-- [ ] Implement `saveWord(wordData)`
-- [ ] Implement `getSavedWords()`
-- [ ] Connect "Save" button to Storage
-
-## 🟡 Phase 2: Flashcards
-- [ ] Fetch saved words in `FlashcardView`
-- [ ] Implement "Show Meaning" toggle
-- [ ] Implement "I Know / I Don't Know" logic (Simple loop)
-- [ ] Empty state (No words saved)
-
-## 🔵 Phase 3: Content Script (Context Menu & Tooltip)
-- [ ] Implement `src/content/Tooltip.jsx` (Floating icon on selection)
-- [ ] Implement `src/content/Modal.jsx` (The actual popup in the page)
-- [ ] Connect Background Script context menu to open the Modal
-- [ ] Ensure styles are isolated (Shadow DOM)
-
-## 🟣 Phase 4: Polish & Release
-- [ ] Add Animations (Framer Motion or CSS)
-- [ ] Improve Error Handling
-- [ ] Export/Import Feature
-- [ ] Final Build & Test
+- [x] **Task 4: Implement Context Menu "Add to EnglishMate"**
+    - **Background Script**:
+        - Update `src/background/main.js` to create "Add to EnglishMate" context menu.
+        - Import `fetchDefinition` and `saveVocabularyItem`.
+        - Implement handler to fetch and save word silently.
+        - Send success/error messages to content script.
+    - **Content Script**:
+        - Create a `Toast` component/logic in `ContentApp.jsx`.
+        - Listen for `word_saved` and `save_error` messages.
+        - Display a non-intrusive notification.
