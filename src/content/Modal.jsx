@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchDefinition } from '../lib/api';
-import { saveWord } from '../lib/storage';
+import { saveVocabularyItem } from '../lib/storage';
 
 const Modal = ({ word, onClose }) => {
     const [data, setData] = useState(null);
@@ -23,8 +23,15 @@ const Modal = ({ word, onClose }) => {
 
     const handleSave = async () => {
         if (data) {
-            await saveWord(data);
-            onClose();
+            try {
+                await saveVocabularyItem(data);
+                onClose();
+            } catch (err) {
+                // Handle error mainly if user tries to save duplicate, maybe show a toast?
+                // For now, simple logging or closing is ok as per current logic
+                console.error("Failed to save:", err);
+                onClose(); // Close anyway for now, or we could keep it open to show error
+            }
         }
     };
 

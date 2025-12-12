@@ -18,19 +18,20 @@ export const fetchDefinition = async (word) => {
         const entry = data[0];
 
         // Extract the most relevant meaning (first one usually)
-        const meaningObj = entry.meanings[0];
-        const definitionObj = meaningObj.definitions[0];
+        const meaningObj = entry.meanings?.[0] || {};
+        const definitionObj = meaningObj.definitions?.[0] || {};
 
         return {
             word: entry.word,
-            phonetic: entry.phonetic || (entry.phonetics.find(p => p.text)?.text) || "",
-            partOfSpeech: meaningObj.partOfSpeech,
-            definition: definitionObj.definition,
+            phonetic: entry.phonetic || entry.phonetics?.find(p => p.text)?.text || "",
+            partOfSpeech: meaningObj.partOfSpeech || "unknown",
+            definition: definitionObj.definition || "No definition available",
             example: definitionObj.example || "",
-            audio: entry.phonetics.find(p => p.audio)?.audio || ""
+            audio: entry.phonetics?.find(p => p.audio)?.audio || ""
         };
 
     } catch (error) {
+        // In production, we might want to log this to a service
         console.error("Dictionary API Error:", error);
         throw error;
     }

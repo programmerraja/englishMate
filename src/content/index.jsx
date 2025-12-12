@@ -12,10 +12,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "toggle_sidebar") {
         // Dispatch a custom event for React to handle
         window.dispatchEvent(new CustomEvent('english-mate-toggle'));
+        sendResponse({ status: "ok" });
     }
 
     // We must return true if we want to sendResponse asynchronously, 
     // but we aren't sending a response here.
+    return true;
 });
 
 // 2. Create Container & Shadow DOM

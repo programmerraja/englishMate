@@ -1,8 +1,6 @@
-import { v4 as uuidv4 } from 'uuid'; // Fallback if crypto not available, but we'll try native first.
-
 const DB_KEY = 'englishMateDB';
 
-// Helpher to generate ID
+// Helper to generate ID
 const generateId = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
         return crypto.randomUUID();
@@ -23,42 +21,13 @@ const getDB = async () => {
         db = result[DB_KEY];
     }
 
-    // 2. If no DB, check for migration from old 'savedWords'
+    // 2. If no DB, initialize default
     if (!db) {
-        let oldWords = [];
-        if (!chrome?.storage?.local) {
-            oldWords = JSON.parse(localStorage.getItem('savedWords') || '[]');
-        } else {
-            const result = await chrome.storage.local.get(['savedWords']);
-            oldWords = result.savedWords || [];
-        }
-
         // Initialize default DB
         db = {
             vocabulary: [],
             sentences: []
         };
-
-        // Migrate if we found old data
-        if (oldWords.length > 0) {
-            console.log("Migrating old data...", oldWords);
-            db.vocabulary = oldWords.map(w => ({
-                id: generateId(),
-                word: w.word,
-                meaning: w.definition,
-                example: w.example || "",
-                notes: "",
-                tags: [],
-                stats: {
-                    practicedAt: w.timestamp ? new Date(w.timestamp).toISOString() : new Date().toISOString(),
-                    nextReviewDate: new Date().toISOString(),
-                    confidenceLevel: 1
-                },
-                originalData: w // Keep original just in case
-            }));
-        }
-
-        // Save the new initialized DB
         await saveDB(db);
     }
 
@@ -97,8 +66,9 @@ export const saveVocabularyItem = async (item) => {
             nextReviewDate: new Date().toISOString(),
             confidenceLevel: 1
         },
-        ...item // Merge any other fields provided, but above defaults take precedence if not in item
+        ...item // Merge other fields
     };
+
     // Ensure critical fields are set correctly if passed in item
     if (item.id) newItem.id = item.id;
     if (item.stats) newItem.stats = item.stats;
@@ -132,13 +102,6 @@ export const updateVocabularyItem = async (id, updates) => {
     // Merge updates
     db.vocabulary[index] = { ...db.vocabulary[index], ...updates };
 
-    // Special handling for nested stats if partially provided? 
-    // Logic: if updates.stats is provided, it replaces the stats object usually. 
-    // If we want partial stats update, we should handle it in the caller or here.
-    // For now, assume caller passes full stats object or we just do shallow merge of top level properties.
-    // Actually, let's allow deep merge for stats if needed, but standard spread usually replaces nested objects.
-    // Let's rely on caller to provide complete stats object if they update stats.
-
     await saveDB(db);
     return db.vocabulary[index];
 };
@@ -150,24 +113,4 @@ export const deleteVocabularyItem = async (id) => {
     const db = await getDB();
     db.vocabulary = db.vocabulary.filter(v => v.id !== id);
     await saveDB(db);
-};
-
-// --- Backward Compatibility Wrapper (Optional) ---
-export const saveWord = async (wordData) => {
-    // Adapter for old saveWord calls to new system
-    return saveVocabularyItem(wordData);
-};
-
-export const getSavedWords = async () => {
-    // Adapter for old getSavedWords calls
-    const vocab = await getVocabulary();
-    // Map back to old format if necessary, or just return new format 
-    // and let components handle it (since we are updating components too).
-    // The components expect { word, definition, example... }
-    // New format: { word, meaning, example... }
-    // We should probably ensure 'definition' exists for legacy components until we update them.
-    return vocab.map(v => ({
-        ...v,
-        definition: v.meaning, // Map meaning back to definition for compatibility
-    }));
 };

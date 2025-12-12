@@ -1,3 +1,4 @@
+
 # Project Specification: EnglishMate
 
 ## Current State
@@ -52,6 +53,44 @@ We will store data in the following JSON structure:
 2.  **Corrected Terminology**: changed `particeAt` to `practicedAt`.
 3.  **Stats Object**: Grouping learning metrics (dates, confidence) keeps the root object clean.
 4.  **Source & Tags**: Added fields for `sourceUrl` and `tags` to provide context and better organization.
+
+## Feature Specification: Vocabulary Management & Notes
+
+### 1. Add Notes during Lookup
+**Objective**: Allow users to add personal context (mnemonics, source URL, thoughts) when saving a word.
+
+**UI Changes**:
+-   **Lookup Component**:
+    -   Add a `textarea` labeled "Add Notes (Optional)" below the definition/example in the result card.
+    -   Bind this input to a `notes` state variable.
+    -   Pass the `notes` value to `saveVocabularyItem` when "Save Word" is clicked.
+
+### 2. Vocabulary List (Management)
+**Objective**: Create a dedicated view for users to browse, edit, and manage their saved collection.
+
+**UI Changes**:
+-   **New Tab**: Add a "Library" or "My List" tab to the main navigation (between Lookup and Practice).
+-   **Library Component**:
+    -   **Search Bar**: top of the list to filter by word or meaning.
+    -   **List View**: Scrollable list of cards. Each card displays:
+        -   Word (Heading)
+        -   Part of Speech (Badge)
+        -   Meaning (Truncated if long)
+        -   Actions Row: [🔊 Listen] [✏️ Edit] [🗑️ Delete]
+
+### 3. Edit & Delete Functionality
+**Objective**: Full CRUD capabilities for vocabulary.
+
+**Logic**:
+-   **Delete**:
+    -   Clicking "Delete" prompts for confirmation (simple `confirm()` or custom modal).
+    -   Calls `deleteVocabularyItem(id)` from storage.
+    -   Refreshes the list.
+-   **Edit**:
+    -   Clicking "Edit" switches the card (or opens a modal) to "Edit Mode".
+    -   Fields available to edit: `Word` (maybe lock this?), `Meaning`, `Example`, `Notes`.
+    -   "Save" button commits changes via `updateVocabularyItem(id, data)`.
+    -   "Cancel" reverts to view mode.
 
 ## Roadmap / Future Features
 -   **Context Menu Integration**: Select text on any webpage, right-click, and "Add to EnglishMate" to instantly save words or content without opening the extension.

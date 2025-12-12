@@ -1,36 +1,24 @@
 import React, { useState } from 'react';
+import SidebarLayout from '../Layout/SidebarLayout';
 import Lookup from '../Lookup';
 import Flashcards from '../Flashcards';
+import Library from '../Library';
+// App.css is likely legacy white theme, check validity or rely on new theme variables
 import './App.css';
 
 function App() {
     const [activeTab, setActiveTab] = useState('lookup');
 
     return (
-        <div className="App">
-            <header className="app-header">
-                <h1>English Mate</h1>
-            </header>
-
-            <nav className="tabs">
-                <button
-                    className={activeTab === 'lookup' ? 'active' : ''}
-                    onClick={() => setActiveTab('lookup')}
-                >
-                    🔍 Lookup
-                </button>
-                <button
-                    className={activeTab === 'flashcards' ? 'active' : ''}
-                    onClick={() => setActiveTab('flashcards')}
-                >
-                    🎓 Practice
-                </button>
-            </nav>
-
-            <main className="app-content">
-                {activeTab === 'lookup' ? <Lookup /> : <Flashcards />}
-            </main>
-        </div>
+        <SidebarLayout
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onClose={() => window.close()} // Valid for side panel
+        >
+            {activeTab === 'lookup' && <Lookup />}
+            {activeTab === 'library' && <Library />}
+            {activeTab === 'flashcards' && <Flashcards />}
+        </SidebarLayout>
     );
 }
 

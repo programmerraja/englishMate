@@ -5,11 +5,20 @@ import { saveVocabularyItem } from '../lib/storage';
 console.log('English Mate Background Script Running');
 
 chrome.runtime.onInstalled.addListener(() => {
+    // 1. Create Context Menu
     chrome.contextMenus.create({
         id: "add-learning-word",
         title: "Add \"%s\" to EnglishMate",
         contexts: ["selection"]
     });
+
+    // 2. Set Side Panel Behavior
+    // Allows users to open the side panel by clicking the action toolbar icon
+    if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
+        chrome.sidePanel
+            .setPanelBehavior({ openPanelOnActionClick: true })
+            .catch((error) => console.error(error));
+    }
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -49,12 +58,4 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
             }).catch(() => { });
         }
     }
-});
-
-// Handle Extension Icon Click
-chrome.action.onClicked.addListener((tab) => {
-    console.log("Extension icon clicked on tab:", tab.id);
-    chrome.tabs.sendMessage(tab.id, {
-        action: "toggle_sidebar"
-    }).catch(err => console.error("Failed to send message:", err));
 });

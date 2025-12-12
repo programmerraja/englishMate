@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchDefinition } from '../lib/api';
-import { saveWord } from '../lib/storage';
+import { saveVocabularyItem } from '../lib/storage';
 
 const SidePanel = ({ word, isOpen, onClose }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const saveBtnRef = useRef(null);
 
     useEffect(() => {
         if (word && isOpen) {
@@ -29,12 +30,21 @@ const SidePanel = ({ word, isOpen, onClose }) => {
 
     const handleSave = async () => {
         if (data) {
-            await saveWord(data);
-            // Optional: Show success feedback
-            const btn = document.getElementById('em-save-btn');
-            if (btn) {
-                btn.innerText = "Saved! ✅";
-                setTimeout(() => btn.innerText = "❤️ Save to English Mate", 2000);
+            try {
+                await saveVocabularyItem(data);
+                // Show success feedback
+                if (saveBtnRef.current) {
+                    const originalText = saveBtnRef.current.innerText;
+                    saveBtnRef.current.innerText = "Saved! ✅";
+                    setTimeout(() => {
+                        if (saveBtnRef.current) {
+                            saveBtnRef.current.innerText = originalText;
+                        }
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error("Failed to save:", err);
+                // Optionally show error feedback
             }
         }
     };
@@ -80,7 +90,11 @@ const SidePanel = ({ word, isOpen, onClose }) => {
                         )}
 
                         <div style={{ marginTop: '24px' }}>
-                            <button id="em-save-btn" className="em-save-btn" onClick={handleSave}>
+                            <button
+                                ref={saveBtnRef}
+                                className="em-save-btn"
+                                onClick={handleSave}
+                            >
                                 ❤️ Save to English Mate
                             </button>
                         </div>
