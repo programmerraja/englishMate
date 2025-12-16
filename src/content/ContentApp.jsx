@@ -1,13 +1,16 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Tooltip from './Tooltip';
 import Toast from './Toast';
 import SidebarLayout from '../components/Layout/SidebarLayout';
 
 // Views
+import Dashboard from '../components/Dashboard/Dashboard';
+import ChatContainer from '../components/Chat/ChatContainer';
 import Lookup from '../components/Lookup';
 import Library from '../components/Library';
 import Flashcards from '../components/Flashcards';
+import Practice from '../components/Practice/Practice';
+import Settings from '../components/Settings/Settings';
 
 // Styles
 import './content.css';
@@ -17,6 +20,10 @@ import flashcardStyles from '../components/Flashcards.css?inline';
 import libraryStyles from '../components/Library.css?inline';
 import themeStyles from '../styles/theme.css?inline';
 import layoutStyles from '../styles/layout.css?inline';
+import dashboardStyles from '../components/Dashboard/Dashboard.css?inline';
+import practiceStyles from '../components/Practice/Practice.css?inline';
+import chatStyles from '../components/Chat/Chat.css?inline';
+import settingsStyles from '../components/Settings/Settings.css?inline';
 
 const safeStyle = (s) => typeof s === 'string' ? s : '';
 
@@ -26,7 +33,11 @@ export const injectedStyles =
     safeStyle(appStyles) + '\n' +
     safeStyle(lookupStyles) + '\n' +
     safeStyle(flashcardStyles) + '\n' +
-    safeStyle(libraryStyles);
+    safeStyle(libraryStyles) + '\n' +
+    safeStyle(dashboardStyles) + '\n' +
+    safeStyle(practiceStyles) + '\n' +
+    safeStyle(chatStyles) + '\n' +
+    safeStyle(settingsStyles);
 
 console.log("Injected Styles Length:", injectedStyles.length);
 
@@ -64,11 +75,7 @@ const ContentApp = () => {
 
     useEffect(() => {
         if (isSidebarOpen) {
-            // Trigger a resize event or manually set width based on current sidebar width
-            // Since we don't store width here (it's in SidebarLayout), we can default or wait for event.
-            // Better: SidebarLayout mounts and sets its default width, potentially firing event?
-            // Fallback:
-            document.body.style.width = `calc(100% - 450px)`; // Default sync
+            document.body.style.width = `calc(100% - 450px)`;
         } else {
             document.body.style.width = '100%';
         }
@@ -113,7 +120,6 @@ const ContentApp = () => {
                     id: Date.now()
                 });
             } else if (request.action === "toggle_sidebar") {
-                // Should be handled by global listener in index.jsx dispatching event, but generic fallback
                 setIsSidebarOpen(prev => !prev);
             }
         };
@@ -141,8 +147,8 @@ const ContentApp = () => {
 
     return (
         <>
-            <div style={{ position: 'fixed', bottom: 10, left: 10, background: 'lime', padding: 5, color: 'black', zIndex: 9999999 }}>
-                React Active ({isSidebarOpen ? 'OPEN' : 'CLOSED'})
+            <div style={{ position: 'fixed', bottom: 10, left: 10, background: 'lime', padding: 5, color: 'black', zIndex: 9999999, fontSize: '10px' }}>
+                EM ({isSidebarOpen ? 'OPEN' : 'CLOSED'})
             </div>
             {selection && !isSidebarOpen && (
                 <Tooltip
@@ -158,9 +164,13 @@ const ContentApp = () => {
                     onTabChange={setActiveTab}
                     onClose={() => setIsSidebarOpen(false)}
                 >
+                    {activeTab === 'dashboard' && <Dashboard onNavigate={setActiveTab} />}
+                    {activeTab === 'chat' && <ChatContainer />}
                     {activeTab === 'lookup' && <Lookup initialQuery={lookupWord} key={lookupWord} />}
                     {activeTab === 'library' && <Library />}
                     {activeTab === 'flashcards' && <Flashcards />}
+                    {activeTab === 'practice' && <Practice />}
+                    {activeTab === 'settings' && <Settings />}
                 </SidebarLayout>
             )}
 
