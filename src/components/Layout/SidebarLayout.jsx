@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import NavRail from './NavRail';
+import { LayoutDashboard, Search, BookOpen, Mic2, Settings } from 'lucide-react';
 import '../../styles/layout.css';
 
 const SIDEBAR_MIN_WIDTH = 350;
@@ -13,9 +14,11 @@ const SidebarLayout = ({ activeTab, onTabChange, onClose, children }) => {
 
     // Navigation configuration
     const tabs = [
-        { id: 'lookup', label: 'Lookup', icon: '🔍' },
-        { id: 'library', label: 'Library', icon: '📚' },
-        { id: 'flashcards', label: 'Practice', icon: '🎓' }
+        { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={22} /> },
+        { id: 'lookup', label: 'Lookup', icon: <Search size={22} /> },
+        { id: 'library', label: 'Library', icon: <BookOpen size={22} /> },
+        { id: 'practice', label: 'Practice', icon: <Mic2 size={22} /> },
+        { id: 'settings', label: 'Settings', icon: <Settings size={22} /> }
     ];
 
     const handleMouseDown = (e) => {

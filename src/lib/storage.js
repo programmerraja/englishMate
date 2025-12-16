@@ -13,12 +13,12 @@ const getDB = async () => {
     let db = null;
 
     // 1. Try to get data
-    if (!chrome?.storage?.local) {
-        const raw = localStorage.getItem(DB_KEY);
-        if (raw) db = JSON.parse(raw);
-    } else {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         const result = await chrome.storage.local.get([DB_KEY]);
         db = result[DB_KEY];
+    } else {
+        const raw = localStorage.getItem(DB_KEY);
+        if (raw) db = JSON.parse(raw);
     }
 
     // 2. If no DB, initialize default
@@ -26,8 +26,31 @@ const getDB = async () => {
         // Initialize default DB
         db = {
             vocabulary: [],
-            sentences: []
+            sentences: [],
+            userSettings: {
+                apiKeys: {
+                    deepgram: "",
+                    gemini: "",
+                    openai: ""
+                },
+                dailyGoal: 5
+            },
+            stats: {
+                streak: 0,
+                lastPracticeDate: null,
+                wordsLearnedHistory: {} // "YYYY-MM-DD": count
+            }
         };
+        await saveDB(db);
+    }
+
+    // Ensure new fields exist for existing users
+    if (!db.userSettings) {
+        db.userSettings = { apiKeys: { deepgram: "", gemini: "", openai: "" }, dailyGoal: 5 };
+        await saveDB(db);
+    }
+    if (!db.stats) {
+        db.stats = { streak: 0, lastPracticeDate: null, wordsLearnedHistory: {} };
         await saveDB(db);
     }
 
@@ -35,10 +58,10 @@ const getDB = async () => {
 };
 
 const saveDB = async (db) => {
-    if (!chrome?.storage?.local) {
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-    } else {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         await chrome.storage.local.set({ [DB_KEY]: db });
+    } else {
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 };
 
@@ -74,6 +97,11 @@ export const saveVocabularyItem = async (item) => {
     if (item.stats) newItem.stats = item.stats;
 
     db.vocabulary.unshift(newItem);
+
+    // Update Stats
+    const today = new Date().toISOString().split('T')[0];
+    db.stats.wordsLearnedHistory[today] = (db.stats.wordsLearnedHistory[today] || 0) + 1;
+
     await saveDB(db);
     return newItem;
 };
@@ -113,4 +141,71 @@ export const deleteVocabularyItem = async (id) => {
     const db = await getDB();
     db.vocabulary = db.vocabulary.filter(v => v.id !== id);
     await saveDB(db);
+};
+
+// --- User Settings & Stats ---
+
+export const getUserSettings = async () => {
+    const db = await getDB();
+    return db.userSettings;
+};
+
+export const updateUserSettings = async (updates) => {
+    const db = await getDB();
+    db.userSettings = { ...db.userSettings, ...updates };
+    await saveDB(db);
+    return db.userSettings;
+};
+
+export const getStats = async () => {
+    const db = await getDB();
+    return db.stats;
+};
+
+export const updateStats = async (updates) => {
+    const db = await getDB();
+    db.stats = { ...db.stats, ...updates };
+    await saveDB(db);
+    return db.stats;
+};
+
+// --- Import / Export ---
+
+export const getFullExportData = async () => {
+    const db = await getDB();
+    // Exclude API keys from export for security
+    const { userSettings, ...cleanDb } = db;
+    // But maybe they want to export settings sans keys? 
+    // customizable based on spec, but keeping it safe for now.
+    return cleanDb;
+};
+
+export const importData = async (jsonData) => {
+    const db = await getDB();
+
+    // Merge vocabulary (avoid duplicates by ID or Word)
+    let newCount = 0;
+
+    if (jsonData.vocabulary && Array.isArray(jsonData.vocabulary)) {
+        for (const item of jsonData.vocabulary) {
+            const exists = db.vocabulary.some(v =>
+                v.id === item.id || v.word.toLowerCase() === item.word.toLowerCase()
+            );
+            if (!exists) {
+                db.vocabulary.push(item);
+                newCount++;
+            }
+        }
+    }
+
+    // Merge stats history if present
+    if (jsonData.stats && jsonData.stats.wordsLearnedHistory) {
+        db.stats.wordsLearnedHistory = {
+            ...db.stats.wordsLearnedHistory,
+            ...jsonData.stats.wordsLearnedHistory
+        };
+    }
+
+    await saveDB(db);
+    return newCount;
 };
