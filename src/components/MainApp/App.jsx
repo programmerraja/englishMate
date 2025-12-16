@@ -4,6 +4,7 @@ import Lookup from '../Lookup';
 import Library from '../Library';
 import Dashboard from '../Dashboard/Dashboard';
 import Practice from '../Practice/Practice';
+import ChatContainer from '../Chat/ChatContainer';
 import Settings from '../Settings/Settings';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             onClose={() => window.close()} // Valid for side panel
         >
             {activeTab === 'dashboard' && <Dashboard onNavigate={setActiveTab} />}
+            {activeTab === 'chat' && <ChatContainer />}
             {activeTab === 'lookup' && <Lookup />}
             {activeTab === 'library' && <Library />}
             {activeTab === 'practice' && <Practice />}

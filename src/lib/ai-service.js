@@ -1,6 +1,6 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
-import { generateText } from 'ai';
+import { generateText, streamText } from 'ai';
 import { getUserSettings } from './storage';
 
 /**
@@ -60,7 +60,7 @@ export const analyzeSpeech = async (transcript, providerChoice = 'gemini') => {
         // Default to Gemini
         if (!apiKeys.gemini) throw new Error("Gemini API Key is missing.");
         const google = createGoogleGenerativeAI({ apiKey: apiKeys.gemini });
-        model = google('gemini-1.5-pro'); // or gemini-pro
+        model = google("models/gemini-flash-latest");
     }
 
     const prompt = `
@@ -91,4 +91,44 @@ export const analyzeSpeech = async (transcript, providerChoice = 'gemini') => {
         console.error("AI Response Parse Error:", text);
         throw new Error("Failed to parse AI feedback.");
     }
+};
+
+/**
+ * Streams chat response from the AI Tutor
+ * @param {Array} messages - History of messages
+ * @param {'gemini'|'openai'} providerChoice 
+ * @returns {Promise<Object>} Stream object from AI SDK
+ */
+export const streamChat = async (messages, providerChoice = 'gemini') => {
+    const settings = await getUserSettings();
+    const apiKeys = settings.apiKeys;
+
+    let model;
+
+    if (providerChoice === 'openai') {
+        if (!apiKeys.openai) throw new Error("OpenAI API Key is missing.");
+        const openai = createOpenAI({ apiKey: apiKeys.openai });
+        model = openai('gpt-4-turbo');
+    } else {
+        if (!apiKeys.gemini) throw new Error("Gemini API Key is missing.");
+        const google = createGoogleGenerativeAI({ apiKey: apiKeys.gemini });
+        model = google("models/gemini-flash-latest");
+    }
+
+    const systemPrompt = `
+    You are EnglishMate, a friendly, patient, and professional English Tutor. 
+    Your goal is to converse with the user to help them practice English. 
+    
+     Guidelines interact:
+    1. Keep responses natural and conversational. Do not lecture unless asked.
+    2. If the user makes a grammar or vocabulary mistake, gently correct them at the end of your response or weaving it naturally into the conversation.
+    3. Encourage the user to speak more. Ask open-ended questions.
+    4. Keep your responses concise (2-4 sentences) mostly, unless explaining a complex concept.
+    `;
+
+    return streamText({
+        model: model,
+        system: systemPrompt,
+        messages: messages,
+    });
 };

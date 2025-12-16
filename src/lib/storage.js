@@ -27,6 +27,7 @@ const getDB = async () => {
         db = {
             vocabulary: [],
             sentences: [],
+            chatSessions: [],
             userSettings: {
                 apiKeys: {
                     deepgram: "",
@@ -51,6 +52,10 @@ const getDB = async () => {
     }
     if (!db.stats) {
         db.stats = { streak: 0, lastPracticeDate: null, wordsLearnedHistory: {} };
+        await saveDB(db);
+    }
+    if (!db.chatSessions) {
+        db.chatSessions = [];
         await saveDB(db);
     }
 
@@ -143,6 +148,60 @@ export const deleteVocabularyItem = async (id) => {
     await saveDB(db);
 };
 
+// --- Chat Sessions Management ---
+
+export const getChatSessions = async () => {
+    const db = await getDB();
+    return db.chatSessions.sort((a, b) => new Date(b.lastUpdatedAt) - new Date(a.lastUpdatedAt));
+};
+
+export const createChatSession = async (title, provider = 'gemini') => {
+    const db = await getDB();
+    const newSession = {
+        id: generateId(),
+        title: title || 'New Chat',
+        provider: provider,
+        createdAt: new Date().toISOString(),
+        lastUpdatedAt: new Date().toISOString(),
+        messages: []
+    };
+    db.chatSessions.unshift(newSession);
+    await saveDB(db);
+    return newSession;
+};
+
+export const updateChatSession = async (sessionId, updates) => {
+    const db = await getDB();
+    const index = db.chatSessions.findIndex(s => s.id === sessionId);
+    if (index === -1) throw new Error("Session not found");
+
+    db.chatSessions[index] = {
+        ...db.chatSessions[index],
+        ...updates,
+        lastUpdatedAt: new Date().toISOString()
+    };
+    await saveDB(db);
+    return db.chatSessions[index];
+};
+
+export const deleteChatSession = async (sessionId) => {
+    const db = await getDB();
+    db.chatSessions = db.chatSessions.filter(s => s.id !== sessionId);
+    await saveDB(db);
+};
+
+export const saveMessageToSession = async (sessionId, message) => {
+    const db = await getDB();
+    const index = db.chatSessions.findIndex(s => s.id === sessionId);
+    if (index === -1) throw new Error("Session not found");
+
+    db.chatSessions[index].messages.push(message);
+    db.chatSessions[index].lastUpdatedAt = new Date().toISOString();
+
+    await saveDB(db);
+    return db.chatSessions[index];
+};
+
 // --- User Settings & Stats ---
 
 export const getUserSettings = async () => {
@@ -204,6 +263,16 @@ export const importData = async (jsonData) => {
             ...db.stats.wordsLearnedHistory,
             ...jsonData.stats.wordsLearnedHistory
         };
+    }
+
+    // Merge chat sessions
+    if (jsonData.chatSessions && Array.isArray(jsonData.chatSessions)) {
+        for (const session of jsonData.chatSessions) {
+            const exists = db.chatSessions.some(s => s.id === session.id);
+            if (!exists) {
+                db.chatSessions.push(session);
+            }
+        }
     }
 
     await saveDB(db);

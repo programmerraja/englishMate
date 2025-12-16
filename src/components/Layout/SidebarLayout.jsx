@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import NavRail from './NavRail';
-import { LayoutDashboard, Search, BookOpen, Mic2, Settings } from 'lucide-react';
+import { LayoutDashboard, Search, BookOpen, Mic2, Settings, MessageSquare } from 'lucide-react';
 import '../../styles/layout.css';
 
 const SIDEBAR_MIN_WIDTH = 350;
@@ -15,6 +15,7 @@ const SidebarLayout = ({ activeTab, onTabChange, onClose, children }) => {
     // Navigation configuration
     const tabs = [
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={22} /> },
+        { id: 'chat', label: 'AI Tutor', icon: <MessageSquare size={22} /> },
         { id: 'lookup', label: 'Lookup', icon: <Search size={22} /> },
         { id: 'library', label: 'Library', icon: <BookOpen size={22} /> },
         { id: 'practice', label: 'Practice', icon: <Mic2 size={22} /> },
